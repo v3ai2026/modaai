@@ -51,7 +51,7 @@ const EngineeringCraft = () => {
              </div>
              <div className="relative overflow-hidden rounded-2xl shadow-2xl mt-12 group">
                <img 
-                src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop" 
+                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop" 
                 className="w-full aspect-square object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
                 alt="Cybersecurity"
                />
@@ -65,7 +65,7 @@ const EngineeringCraft = () => {
              </div>
              <div className="relative overflow-hidden rounded-2xl shadow-2xl group">
                <img 
-                src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=2020&auto=format&fit=crop" 
+                src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=2020&auto=crop" 
                 className="w-full aspect-square object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
                 alt="Advanced Tech"
                />

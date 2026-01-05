@@ -1,0 +1,18 @@
+
+{
+  "hosting": {
+    "site": "gen-lang-client-0654563230-6755e",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
