@@ -25,6 +25,8 @@
    ```bash
    npm install --legacy-peer-deps
    ```
+   
+   > **注意**: 由于使用 React 19 而 framer-motion 需要 React 18，需要使用 `--legacy-peer-deps` 标志。
 
 3. **配置环境变量**
    ```bash
