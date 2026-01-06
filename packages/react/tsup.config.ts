@@ -1,4 +1,6 @@
 import { defineConfig } from 'tsup';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 export default defineConfig({
   entry: {
@@ -22,18 +24,15 @@ export default defineConfig({
   },
   onSuccess: async () => {
     // Copy CSS files to dist
-    const fs = require('fs');
-    const path = require('path');
-    
-    const copyCss = (src, dest) => {
-      if (fs.existsSync(src)) {
-        fs.copyFileSync(src, dest);
+    const copyCss = (src: string, dest: string) => {
+      if (existsSync(src)) {
+        copyFileSync(src, dest);
       }
     };
 
     // Create dist directory if it doesn't exist
-    if (!fs.existsSync('dist')) {
-      fs.mkdirSync('dist', { recursive: true });
+    if (!existsSync('dist')) {
+      mkdirSync('dist', { recursive: true });
     }
 
     // Copy animation CSS
@@ -49,15 +48,16 @@ export default defineConfig({
 
     // Create combined styles.css
     let allStyles = '';
-    if (fs.existsSync('src/animation/animations.css')) {
-      allStyles += fs.readFileSync('src/animation/animations.css', 'utf-8') + '\n';
+    if (existsSync('src/animation/animations.css')) {
+      allStyles += readFileSync('src/animation/animations.css', 'utf-8') + '\n';
     }
     components.forEach(component => {
       const src = `src/components/${component}/${component}.module.css`;
-      if (fs.existsSync(src)) {
-        allStyles += fs.readFileSync(src, 'utf-8') + '\n';
+      if (existsSync(src)) {
+        allStyles += readFileSync(src, 'utf-8') + '\n';
       }
     });
-    fs.writeFileSync('dist/styles.css', allStyles);
+    writeFileSync('dist/styles.css', allStyles);
   }
 });
+
