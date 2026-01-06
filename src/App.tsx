@@ -1,18 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SectionId, CompilerStatus, Message, PrivateNode, Asset } from './types';
-import ImmersiveLanding from './components/ImmersiveLanding';
-import Workspace from './components/Workspace';
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
-import RightPanel from './components/RightPanel';
-import PromptBar from './components/PromptBar';
-import { AccessTerminal } from './components/AccessTerminal';
-import { getCompilerResponseStream } from './services/geminiService';
-import { SharePortal } from './components/SharePortal';
-import { QuickActions } from './components/QuickActions';
-import { VoiceConsultant } from './components/VoiceConsultant';
+import { Motion, AnimatePresence } from '@/ui/animation';
+import { SectionId, CompilerStatus, Message, PrivateNode, Asset } from '@/types';
+import ImmersiveLanding from '@/components/ImmersiveLanding';
+import Workspace from '@/components/Workspace';
+import Navbar from '@/components/Navbar';
+import Sidebar from '@/components/Sidebar';
+import RightPanel from '@/components/RightPanel';
+import PromptBar from '@/components/PromptBar';
+import { AccessTerminal } from '@/components/AccessTerminal';
+import { getCompilerResponseStream } from '@/services/geminiService';
+import { SharePortal } from '@/components/SharePortal';
+import { QuickActions } from '@/components/QuickActions';
+import { VoiceConsultant } from '@/components/VoiceConsultant';
 
 const INITIAL_NODES: PrivateNode[] = [
   { id: 'n1', name: 'Logic-Compute-01', ip: '10.0.0.101', status: 'ONLINE', load: 12, type: 'LOGIC' },
@@ -29,10 +28,14 @@ const INITIAL_ASSETS: Asset[] = [
 
 // Helper to check for Studio API Key - assuming window.aistudio is available globally
 const checkApiKey = async (): Promise<boolean> => {
+  // Priority 1: Check AI Studio environment
   if (typeof (window as any).aistudio?.hasSelectedApiKey === 'function') {
     return await (window as any).aistudio.hasSelectedApiKey();
   }
-  return false;
+  
+  // Priority 2: Check local environment variable
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  return !!apiKey && apiKey.length > 0;
 };
 
 const openKeyDialog = async () => {
@@ -145,12 +148,12 @@ const App: React.FC = () => {
     <div className="h-screen bg-black overflow-hidden flex flex-col font-sans">
       <AnimatePresence mode="wait">
         {view === 'landing' ? (
-          <motion.div 
+          <Motion 
             key="landing"
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0, filter: 'blur(60px)', scale: 1.5, rotate: 2 }}
-            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.5, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
             className="h-full overflow-hidden"
           >
             <ImmersiveLanding 
@@ -158,14 +161,14 @@ const App: React.FC = () => {
               onLoginClick={() => setShowAuth(true)}
               memberId={memberId} 
             />
-          </motion.div>
+          </Motion>
         ) : (
-          <motion.div 
+          <Motion 
             key="studio"
             initial={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }} 
             animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} 
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.2, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
             className="flex flex-col h-full bg-google-bg"
           >
             <Navbar 
@@ -202,7 +205,7 @@ const App: React.FC = () => {
               </main>
               <RightPanel status={status} nodes={nodes} onNodeControl={() => {}} />
             </div>
-          </motion.div>
+          </Motion>
         )}
       </AnimatePresence>
 

@@ -1,10 +1,27 @@
-
-import { GoogleGenAI, Modality, LiveServerMessage } from "@google/genai";
-import { Message, MemoryNode } from "../types";
+import { GeminiClient } from './ai/GeminiClient';
+import { AIMessage } from './ai/types';
+import { Message, MemoryNode } from '../types';
 
 const SYSTEM_INSTRUCTION = `你现在是 moda AI Studio 的核心大脑。
 你的任务是担任高级前端架构师，将用户的自然语言意图编译为高质量、类型安全的 React 组件代码。
 回复风格：冷峻、高效、充满技术深度。`;
+
+// Get API key from environment or AI Studio
+function getApiKey(): string {
+  // Check AI Studio first (for backward compatibility)
+  if (typeof (window as any).aistudio?.getApiKey === 'function') {
+    return (window as any).aistudio.getApiKey();
+  }
+  
+  // Fall back to environment variable
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn('No API key found. Please set VITE_GEMINI_API_KEY or use AI Studio.');
+    return '';
+  }
+  
+  return apiKey;
+}
 
 export const getCompilerResponseStream = async (
   history: Message[], 
@@ -12,33 +29,29 @@ export const getCompilerResponseStream = async (
   memories: MemoryNode[],
   onChunk: (text: string) => void
 ): Promise<string> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getApiKey();
   if (!apiKey) return "Critical: API_KEY_MISSING.";
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const client = new GeminiClient(apiKey);
     const memoryString = memories.map(m => `[${m.category}] ${m.title}: ${m.content}`).join('\n');
     const enrichedInstruction = `${SYSTEM_INSTRUCTION}\n\n[CONTEXT_MEMORY]\n${memoryString || 'MCP 初始状态：无历史上下文。'}`;
 
-    const contents = history.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }]
+    const messages: AIMessage[] = history.map(msg => ({
+      role: msg.role,
+      content: msg.content
     }));
-    contents.push({ role: 'user', parts: [{ text: userInput }] });
-
-    const responseStream = await ai.models.generateContentStream({
-      model: 'gemini-3-pro-preview',
-      contents: contents,
-      config: {
-        systemInstruction: enrichedInstruction,
-        temperature: 0.75,
-        thinkingConfig: { thinkingBudget: 8192 } 
-      },
-    });
+    messages.push({ role: 'user', content: userInput });
 
     let fullText = "";
-    for await (const chunk of responseStream) {
-      if (chunk.text) {
+    const stream = client.generateStream('gemini-2.0-flash-exp', messages, {
+      systemInstruction: enrichedInstruction,
+      temperature: 0.75,
+      thinkingConfig: { thinkingBudget: 8192 }
+    });
+
+    for await (const chunk of stream) {
+      if (chunk.text && !chunk.done) {
         fullText += chunk.text;
         onChunk(fullText);
       }
@@ -46,6 +59,12 @@ export const getCompilerResponseStream = async (
     return fullText;
   } catch (error: any) {
     console.error("Gemini Compiler Error:", error);
+    
+    // If error mentions "not found", might be invalid API key
+    if (error.message?.includes("Requested entity was not found") || error.message?.includes("404")) {
+      return `[COMPILER_ERROR] API key may be invalid or expired. Please check your configuration.`;
+    }
+    
     return `[COMPILER_ERROR] ${error.message}`;
   }
 };
@@ -55,7 +74,7 @@ export const getCompilerResponseStream = async (
  * Leverages Google Search Grounding for verified global intelligence.
  */
 export const fetchIntelligence = async (topic: 'FASHION' | 'FINANCE' | 'DEEP_SEARCH'): Promise<{ text: string, sources: { title: string, uri: string }[] }> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getApiKey();
   if (!apiKey) throw new Error("API_KEY_MISSING");
 
   let prompt = "";
@@ -95,30 +114,30 @@ export const fetchIntelligence = async (topic: 'FASHION' | 'FINANCE' | 'DEEP_SEA
       break;
   }
 
-  const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: prompt,
-    config: {
-      tools: [{ googleSearch: {} }],
-      temperature: 0.1
-    }
+  const client = new GeminiClient(apiKey);
+  const text = await client.generate('gemini-2.0-flash-exp', [{ role: 'user', content: prompt }], {
+    tools: [{ googleSearch: {} }],
+    temperature: 0.1
   });
 
-  const text = response.text || "无法建立全球情报链路。";
-  const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
-    ?.filter(chunk => chunk.web)
-    .map(chunk => ({
-      title: chunk.web?.title || "情报源",
-      uri: chunk.web?.uri || ""
-    })) || [];
-
-  return { text, sources };
+  // Note: Grounding metadata not available in pure fetch implementation
+  // Would need to parse from response if available
+  return { 
+    text: text || "无法建立全球情报链路。", 
+    sources: [] 
+  };
 };
 
 // --- Audio Utilities ---
+// These remain unchanged as they're utility functions
 export function encodeAudio(bytes: Uint8Array) { let b = ''; for (let i = 0; i < bytes.length; i++) b += String.fromCharCode(bytes[i]); return btoa(b); }
 export function decodeAudio(base64: string) { const b = atob(base64), l = b.length, res = new Uint8Array(l); for (let i = 0; i < l; i++) res[i] = b.charCodeAt(i); return res; }
 export async function decodeAudioData(data: Uint8Array, ctx: AudioContext, rate: number, ch: number): Promise<AudioBuffer> { const d16 = new Int16Array(data.buffer), f = d16.length / ch, b = ctx.createBuffer(ch, f, rate); for (let c = 0; c < ch; c++) { const cd = b.getChannelData(c); for (let i = 0; i < f; i++) cd[i] = d16[i * ch + c] / 32768.0; } return b; }
 export function createPcmBlob(data: Float32Array) { const l = data.length, i16 = new Int16Array(l); for (let i = 0; i < l; i++) i16[i] = data[i] * 32768; return { data: encodeAudio(new Uint8Array(i16.buffer)), mimeType: 'audio/pcm;rate=16000' }; }
-export const connectLiveConsultant = async (c: any) => { const ak = process.env.API_KEY; if (!ak) throw new Error("KEY_REQ"); const ai = new GoogleGenAI({ apiKey: ak }); return ai.live.connect({ model: 'gemini-2.5-flash-native-audio-preview-09-2025', callbacks: { onmessage: async (m: any) => { const a = m.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data; if (a) c.onAudioData(a); if (m.serverContent?.outputTranscription) c.onOutputTranscription(m.serverContent.outputTranscription.text); if (m.serverContent?.inputTranscription) c.onInputTranscription(m.serverContent.inputTranscription.text); if (m.serverContent?.interrupted) c.onInterrupted(); if (m.serverContent?.turnComplete) c.onTurnComplete(); } }, config: { responseModalities: [Modality.AUDIO], outputAudioTranscription: {}, inputAudioTranscription: {}, speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } }, systemInstruction: "你是一个顶尖的数字时尚顾问。" } }); };
+
+// Live audio consultant - currently not implemented without @google/genai SDK
+// This would require WebSocket implementation or similar for live audio
+export const connectLiveConsultant = async (c: any) => {
+  throw new Error("Live audio consultation requires WebSocket implementation. Feature temporarily unavailable.");
+};
+
