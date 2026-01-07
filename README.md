@@ -1,100 +1,281 @@
-# 🧠 moda AI Studio - Local Deployment Guide
+<div align="center">
 
-欢迎使用 **Moda OS (v3.1)**。这是一个基于 Google Studio 规范构建的下一代 AI 前端编译器。遵循以下步骤，即可在你的本地机器上启动该工作站。
+# V3 AI Platform - Unified Monorepo
 
-## 🛠️ 环境要求
+**统一所有项目的超级 Monorepo 平台**
 
-- **Node.js**: v18.0.0 或更高版本
-- **npm / pnpm / yarn**: 建议使用最新版本
-- **Google AI API Key**: 用于激活逻辑编译、视频合成和图像渲染能力
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
+[![Turbo](https://img.shields.io/badge/Turborepo-2.0-EF4444)](https://turbo.build/)
+[![pnpm](https://img.shields.io/badge/pnpm-9.0-F69220)](https://pnpm.io/)
+
+</div>
+
+---
+
+## 🎯 项目概述
+
+V3 AI Platform 是一个统一的 Monorepo 架构，整合了多个 AI 驱动的应用和共享包，提供从智能编译到 AI 内容生成的完整解决方案。
+
+## 📦 项目结构
+
+```
+v3ai-platform/
+├── apps/                           # 所有应用
+│   ├── moda-studio/               # 智能编译器（React + Vite）
+│   ├── portal/                    # 统一入口门户
+│   ├── vision-commerce/           # 电商平台（待实现）
+│   ├── deploy-hub/                # 部署平台（待实现）
+│   └── intelligence-hub/          # AI 智能中心（待实现）
+│
+├── packages/                       # 共享包
+│   ├── ui-react/                  # React UI 组件库 (80+ 图标)
+│   ├── core/                      # 核心工具（AI 客户端、存储、HTTP）
+│   ├── ui-vue/                    # Vue UI 组件库（待实现）
+│   ├── auth/                      # 统一认证（待实现）
+│   ├── database/                  # 数据库服务（待实现）
+│   └── config/                    # 共享配置（待实现）
+│
+├── docs/                          # 统一文档（待实现）
+├── scripts/                       # 构建脚本（待实现）
+└── .github/workflows/             # CI/CD 工作流（待实现）
+```
 
 ## 🚀 快速开始
 
-### 1. 克隆并进入目录
-如果你已经下载了文件，请在终端进入项目根目录：
+> **快速部署？** 查看 [QUICKSTART.md](./QUICKSTART.md) 获取 5 分钟快速启动指南！  
+> **完整部署？** 查看 [DEPLOYMENT.md](./DEPLOYMENT.md) 获取详细部署文档！
+
+### 前置要求
+
+- Node.js >= 18.0.0
+- pnpm >= 9.0.0
+
+### 三步启动
+
 ```bash
-cd moda-ai-studio
+# 1. 安装 pnpm（如果还没有）
+npm install -g pnpm@9
+
+# 2. 安装依赖并构建共享包
+pnpm install
+pnpm build:packages
+
+# 3. 启动应用
+pnpm dev:portal        # 统一门户 (端口 3004)
+# 或
+pnpm dev:moda          # Moda Studio (端口 3000)
 ```
 
-### 2. 安装依赖
-该项目依赖 React 19、Tailwind CSS、Framer Motion 以及 Google Generative AI SDK。
+### 开发模式
+
+#### 启动所有应用
+
 ```bash
-npm install
+pnpm dev
 ```
 
-### 3. 配置环境变量（本地或 Vercel）
-- 本地开发：在项目根目录创建 `.env`（已被 `.gitignore` 忽略，切勿提交）。
-- 生产部署（Vercel）：到 Project Settings → Environment Variables 配置同名变量。
+#### 启动单个应用
 
-推荐变量（示例见 `.env.example`）：
-```env
-# Google AI Studio 密钥（推荐）
-GEMINI_API_KEY=你的_GEMINI_API_KEY
-
-# 可选：OpenAI 兼容密钥（若切换到 OPENAI 提供商）
-OPENAI_API_KEY=可选_OPENAI_KEY
-
-# 仅用于本地脚本与 Vercel API 交互（不要放到前端代码里）
-VERCEL_TOKEN=你的_VERCEL_TOKEN
-VERCEL_PROJECT_ID=你的_VERCEL_PROJECT_ID
-VERCEL_ORG_ID=你的_VERCEL_ORG_ID
-```
-
-### 4. 启动开发服务器
 ```bash
-npm run dev
+pnpm dev:moda          # Moda Studio (端口 3000)
+pnpm dev:portal        # Portal (端口 3004)
+pnpm dev:commerce      # Vision Commerce (端口 3001)
+pnpm dev:deploy        # Deploy Hub (端口 3002)
+pnpm dev:intelligence  # Intelligence Hub (端口 3003)
 ```
-启动成功后，访问终端输出的本地地址（通常是 `http://localhost:5173`）。
 
-## 📁 项目结构说明
+#### 启动多个应用
 
-- `/components`: 核心 UI 模块（编译器、媒体实验室、战略后台等）。
-- `/services`: AI 接口分发与持久化逻辑。
-- `App.tsx`: 系统主入口与路由状态机。
-- `index.html`: 注入了黑金主题 CSS 与光标逻辑的容器。
-
-## 🔐 隐私与主权
-- **本地持久化**: 所有的聊天记录和配置均存储在浏览器的 `LocalStorage` 中。
-- **代码导出**: 在“编译器”中生成的代码遵循标准的 ES6/TSX 规范，可直接复制到 VS Code 中使用。
-
-## ☁️ 部署到 Vercel
-- 连接 GitHub 仓库（main 分支自动部署）。
-- 在 Vercel Project Settings → Environment Variables 设置：`GEMINI_API_KEY`（必填），如需 OpenAI 也设置 `OPENAI_API_KEY`。
-- 本项目已提供 `vercel.json`，支持单页应用路由与静态资源缓存。
-
-### （可选）后端代理以隐藏金钥
-- 新增 `api/ai-proxy.ts` 作为 Vercel Serverless 函数，前端可改为调用 `/api/ai-proxy`，不再直接把金钥暴露在浏览器。
-- 请求格式：`POST /api/ai-proxy`，JSON `{ provider?: 'GEMINI' | 'OPENAI', messages?: Message[], userInput: string }`
-- 环境变量：`GEMINI_API_KEY`（或 `API_KEY` 兼容）/ `OPENAI_API_KEY`
-
-### 绑定与验证自定义域名（例如 modamoda.club）
-1) 在 Vercel 控制台 Project → Domains 添加 `modamoda.club`。
-2) 到域名 DNS 服务商添加 Vercel 指引的 `A/CNAME/TXT` 记录。
-3) 返回 Vercel 点击 Verify 直至状态为已验证。
-
-> 注意：不要在代码中硬编码域名或任何密码/Token。域名、Token、项目 ID 等仅应放在 Vercel 的环境变量或本地 `.env` 中。
-
-### 与 Vercel API 交互（可选）
-使用环境变量驱动的脚本或 `curl`，避免将 Token/ID 写死在代码里：
 ```bash
-# 获取项目信息
-curl -H "Authorization: Bearer $VERCEL_TOKEN" \
-	"https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID"
-
-# 列出域名
-curl -H "Authorization: Bearer $VERCEL_TOKEN" \
-	"https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/domains"
-
-# 绑定域名
-curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-	-H "Content-Type: application/json" \
-	-d '{"name":"modamoda.club"}' \
-	"https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/domains"
-
-# 触发域名验证
-curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-	"https://api.vercel.com/v10/domains/modamoda.club/verify"
+pnpm dev:all          # 并行启动 moda, commerce, portal
 ```
+
+### 构建
+
+```bash
+# 构建所有项目
+pnpm build
+
+# 构建所有应用
+pnpm build:apps
+
+# 构建所有包
+pnpm build:packages
+```
+
+### 测试与代码质量
+
+```bash
+# 运行测试
+pnpm test
+
+# 代码检查
+pnpm lint
+
+# 代码格式化
+pnpm format
+```
+
+## 📚 核心应用
+
+### 1. Moda Studio（智能编译器）
+- **端口**: 3000
+- **技术栈**: React 19 + Vite + TypeScript
+- **功能**: AI 驱动的代码生成与智能编译
+- **特性**: 
+  - 33+ 专业组件
+  - Gemini AI 集成
+  - 实时代码生成
+  - 语音助手
+
+### 2. Portal（统一入口）
+- **端口**: 3004
+- **技术栈**: React 19 + Vite + TypeScript
+- **功能**: 统一应用入口和导航
+- **特性**: 
+  - 应用启动器
+  - 统一导航
+  - 美观的应用网格展示
+
+### 3. Vision Commerce（电商平台）*待实现*
+- **端口**: 3001
+- **计划功能**: 3D 产品展示、AR 试穿、智能推荐
+
+### 4. Deploy Hub（部署平台）*待实现*
+- **端口**: 3002
+- **计划功能**: 一键部署、自动化 CI/CD
+
+### 5. Intelligence Hub（AI 智能中心）*待实现*
+- **端口**: 3003
+- **计划功能**: 多模态内容生成、AI 代理市场
+
+## 📦 共享包
+
+### @v3ai/ui-react
+
+React UI 组件库，包含 80+ 图标组件和动画系统。
+
+```typescript
+import { Sparkles, Database, Code } from '@v3ai/ui-react/icons';
+import { Motion, FadeIn, SlideIn } from '@v3ai/ui-react/animation';
+import { useLocalStorage, useMediaQuery } from '@v3ai/ui-react/hooks';
+import { cn, clamp } from '@v3ai/ui-react/utils';
+```
+
+**包含的图标**:
+- 基础图标: Sparkles, Database, Code, Settings, Users, FileText, Image, Video, etc.
+- 导航图标: Menu, X, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, etc.
+- 操作图标: Plus, Minus, Check, Edit, Save, Copy, Trash, etc.
+- 媒体图标: Play, Pause, Stop, Mic, MicOff, Volume2, VolumeX, etc.
+- 系统图标: Cpu, Server, Terminal, Layers, Grid, Package, etc.
+
+### @v3ai/core
+
+框架无关的核心工具库。
+
+```typescript
+import { GeminiClient } from '@v3ai/core/ai';
+import { localStorage, sessionStorage } from '@v3ai/core/storage';
+import { HttpClient } from '@v3ai/core/http';
+import { cn, debounce, throttle } from '@v3ai/core/utils';
+```
+
+**功能模块**:
+- **AI 客户端**: GeminiClient（支持流式响应、对话、搜索增强）
+- **存储**: localStorage、sessionStorage 包装器
+- **HTTP**: 带超时的 fetch 客户端
+- **工具**: 常用实用函数
+
+## ⚙️ 配置
+
+### 环境变量
+
+复制 `.env.example` 到 `.env` 并填写您的 API 密钥：
+
+```bash
+cp .env.example .env
+```
+
+**必需的环境变量**:
+
+```bash
+# Gemini AI
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+
+# 应用端口
+PORT_MODA=3000
+PORT_COMMERCE=3001
+PORT_DEPLOY=3002
+PORT_INTELLIGENCE=3003
+PORT_PORTAL=3004
+```
+
+### Workspace 配置
+
+本项目使用 pnpm workspace 和 Turborepo:
+
+- **pnpm-workspace.yaml**: 定义 workspace 包
+- **turbo.json**: 定义构建管道和缓存策略
+
+## 🔧 开发
+
+### 添加新的共享包
+
+1. 在 `packages/` 下创建新目录
+2. 添加 `package.json` 和必要的文件
+3. 在应用中使用 `workspace:*` 引用
+
+### 添加新的应用
+
+1. 在 `apps/` 下创建新目录
+2. 配置构建工具（Vite/Next.js/Nuxt）
+3. 在根 `package.json` 中添加脚本
+
+### 包引用示例
+
+```typescript
+// 在任何应用中使用共享包
+import { Sparkles } from '@v3ai/ui-react/icons';
+import { GeminiClient } from '@v3ai/core/ai';
+
+const client = new GeminiClient({
+  apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+});
+```
+
+## 📖 文档
+
+完整的文档将在 `docs/` 目录下提供（使用 VitePress）。
+
+```bash
+# 启动文档开发服务器
+pnpm docs:dev
+
+# 构建文档
+pnpm docs:build
+```
+
+## 🤝 贡献
+
+欢迎贡献！请先阅读 [贡献指南](CONTRIBUTING.md)。
+
+## 📄 许可证
+
+[MIT License](LICENSE)
+
+## 🔗 相关链接
+
+- [Turborepo](https://turbo.build/)
+- [pnpm](https://pnpm.io/)
+- [Vite](https://vitejs.dev/)
+- [React](https://react.dev/)
+- [Google Gemini](https://ai.google.dev/)
 
 ---
-*Powered by Google Gemini & Moda Labs.*
+
+<div align="center">
+
+**Made with ❤️ by V3 AI Team**
+
+</div>

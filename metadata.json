@@ -1,8 +1,0 @@
-{
-  "name": "moda AI Studio - 智能编译器",
-  "description": "基于Google Studio规范的下一代AI前端编译器，支持从自然语言到生产级组件的自动化部署。",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
-}
