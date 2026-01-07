@@ -3,9 +3,9 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": "dist",
+  "buildCommand": "pnpm install && pnpm build:packages && pnpm build:apps",
+  "installCommand": "npm install -g pnpm@9 && pnpm install",
+  "outputDirectory": "apps/portal/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
@@ -19,5 +19,8 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "NODE_VERSION": "20"
+  }
 }

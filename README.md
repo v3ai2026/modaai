@@ -1,100 +1,150 @@
-# 🧠 moda AI Studio - Local Deployment Guide
+# 🧠 MODA AI Platform - Monorepo
 
-欢迎使用 **Moda OS (v3.1)**。这是一个基于 Google Studio 规范构建的下一代 AI 前端编译器。遵循以下步骤，即可在你的本地机器上启动该工作站。
+欢迎使用 **MODA AI Platform v3.1** - 基于 Google Gemini 构建的下一代 AI 驱动开发平台。
 
-## 🛠️ 环境要求
+## 🌟 项目概览
 
-- **Node.js**: v18.0.0 或更高版本
-- **npm / pnpm / yarn**: 建议使用最新版本
-- **Google AI API Key**: 用于激活逻辑编译、视频合成和图像渲染能力
+MODA AI Platform 是一个全栈 AI 开发平台，采用现代化的 monorepo 架构，集成了多个互联应用和共享包。
+
+### 🏗️ 架构
+
+```
+v3ai-platform/
+├── apps/                    # 应用程序
+│   ├── moda-studio/        # AI 智能编译器 ⭐
+│   ├── portal/             # 平台门户
+│   ├── vision-commerce/    # 视觉商务 (计划中)
+│   ├── deploy-hub/         # 部署中心 (计划中)
+│   └── intelligence-hub/   # 智能中心 (计划中)
+└── packages/               # 共享包
+    ├── ui-react/          # React UI 组件库
+    └── core/              # 核心工具库
+```
+
+### 🚀 核心应用
+
+#### MODA Studio (AI 智能编译器)
+- **技术栈**: React 19 • TypeScript • Tailwind CSS • Framer Motion • Vite
+- **功能**: AI 驱动的代码生成、实时编译、智能补全
+- **AI 引擎**: Google Gemini 3 Flash / OpenAI GPT-4o
+- **特色**: 空间导航式工作区、流式 AI 响应、本地持久化
+
+#### Portal (平台门户)
+- 统一的应用入口和导航
+- 简洁的现代化界面
+- 快速访问各个子应用
+
+## 📋 技术栈
+
+- **前端框架**: React 19
+- **类型系统**: TypeScript 5.8
+- **样式方案**: Tailwind CSS
+- **动画库**: Framer Motion
+- **构建工具**: Vite 6.2
+- **包管理器**: pnpm 9
+- **构建系统**: Turbo
+- **AI SDK**: Google GenAI SDK, OpenAI API
 
 ## 🚀 快速开始
 
-### 1. 克隆并进入目录
-如果你已经下载了文件，请在终端进入项目根目录：
+### 安装
+
 ```bash
-cd moda-ai-studio
+# 安装 pnpm (如果还没有)
+npm install -g pnpm@9
+
+# 安装依赖
+pnpm install
 ```
 
-### 2. 安装依赖
-该项目依赖 React 19、Tailwind CSS、Framer Motion 以及 Google Generative AI SDK。
+### 配置环境变量
+
 ```bash
-npm install
+cp .env.example .env
+# 编辑 .env 并添加你的 API 密钥
 ```
 
-### 3. 配置环境变量（本地或 Vercel）
-- 本地开发：在项目根目录创建 `.env`（已被 `.gitignore` 忽略，切勿提交）。
-- 生产部署（Vercel）：到 Project Settings → Environment Variables 配置同名变量。
+### 运行开发服务器
 
-推荐变量（示例见 `.env.example`）：
-```env
-# Google AI Studio 密钥（推荐）
-GEMINI_API_KEY=你的_GEMINI_API_KEY
-
-# 可选：OpenAI 兼容密钥（若切换到 OPENAI 提供商）
-OPENAI_API_KEY=可选_OPENAI_KEY
-
-# 仅用于本地脚本与 Vercel API 交互（不要放到前端代码里）
-VERCEL_TOKEN=你的_VERCEL_TOKEN
-VERCEL_PROJECT_ID=你的_VERCEL_PROJECT_ID
-VERCEL_ORG_ID=你的_VERCEL_ORG_ID
-```
-
-### 4. 启动开发服务器
 ```bash
-npm run dev
+# 启动 MODA Studio
+pnpm dev:moda
+
+# 启动 Portal
+pnpm dev:portal
 ```
-启动成功后，访问终端输出的本地地址（通常是 `http://localhost:5173`）。
+
+### 构建生产版本
+
+```bash
+# 构建共享包
+pnpm build:packages
+
+# 构建所有应用
+pnpm build:apps
+
+# 或一次性构建所有
+pnpm build
+```
+
+## 📖 文档
+
+- **[快速开始指南](./QUICKSTART.md)** - 详细的安装和运行说明
+- **[部署指南](./DEPLOYMENT.md)** - Vercel 和其他平台的部署说明
+- **[Copilot 指南](./.github/copilot-instructions.md)** - 开发者指南和架构模式
+
+## 🛠️ 环境要求
+
+- **Node.js**: v20.0.0 或更高版本
+- **pnpm**: v9.0.0 或更高版本
+- **Google AI API Key**: 用于 AI 功能
 
 ## 📁 项目结构说明
 
-- `/components`: 核心 UI 模块（编译器、媒体实验室、战略后台等）。
-- `/services`: AI 接口分发与持久化逻辑。
-- `App.tsx`: 系统主入口与路由状态机。
-- `index.html`: 注入了黑金主题 CSS 与光标逻辑的容器。
+### Apps (应用程序)
 
-## 🔐 隐私与主权
-- **本地持久化**: 所有的聊天记录和配置均存储在浏览器的 `LocalStorage` 中。
-- **代码导出**: 在“编译器”中生成的代码遵循标准的 ES6/TSX 规范，可直接复制到 VS Code 中使用。
+- **moda-studio**: 核心 AI 编译器，包含完整的 AI 驱动开发环境
+- **portal**: 简洁的应用门户和导航中心
+- **其他应用**: 占位符，未来功能扩展
+
+### Packages (共享包)
+
+- **ui-react**: 共享的 React UI 组件库
+- **core**: 共享的工具函数和类型定义
+
+## 🎨 设计系统
+
+- **配色方案**: 深色模式，黑金主题
+- **背景色**: `#020202` (google.bg)
+- **强调色**: `#8ab4f8` (google.accent)
+- **字体**: Space Grotesk (UI), Space Mono (代码)
+- **动画**: Framer Motion springs (damping: 45, stiffness: 240)
+
+## 🔐 隐私与安全
+
+- **本地存储**: 所有数据存储在浏览器 LocalStorage
+- **API 密钥**: 通过环境变量管理，不暴露在前端
+- **无后端**: 当前版本完全基于浏览器，无需服务器
 
 ## ☁️ 部署到 Vercel
-- 连接 GitHub 仓库（main 分支自动部署）。
-- 在 Vercel Project Settings → Environment Variables 设置：`GEMINI_API_KEY`（必填），如需 OpenAI 也设置 `OPENAI_API_KEY`。
-- 本项目已提供 `vercel.json`，支持单页应用路由与静态资源缓存。
 
-### （可选）后端代理以隐藏金钥
-- 新增 `api/ai-proxy.ts` 作为 Vercel Serverless 函数，前端可改为调用 `/api/ai-proxy`，不再直接把金钥暴露在浏览器。
-- 请求格式：`POST /api/ai-proxy`，JSON `{ provider?: 'GEMINI' | 'OPENAI', messages?: Message[], userInput: string }`
-- 环境变量：`GEMINI_API_KEY`（或 `API_KEY` 兼容）/ `OPENAI_API_KEY`
+1. 连接 GitHub 仓库到 Vercel
+2. 在 Vercel 项目设置中配置环境变量:
+   - `GEMINI_API_KEY` (必需)
+   - `OPENAI_API_KEY` (可选)
+   - `NODE_VERSION=20`
+3. 部署会自动使用 `vercel.json` 中的配置
 
-### 绑定与验证自定义域名（例如 modamoda.club）
-1) 在 Vercel 控制台 Project → Domains 添加 `modamoda.club`。
-2) 到域名 DNS 服务商添加 Vercel 指引的 `A/CNAME/TXT` 记录。
-3) 返回 Vercel 点击 Verify 直至状态为已验证。
+详细部署说明请参考 [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-> 注意：不要在代码中硬编码域名或任何密码/Token。域名、Token、项目 ID 等仅应放在 Vercel 的环境变量或本地 `.env` 中。
+## 🤝 贡献
 
-### 与 Vercel API 交互（可选）
-使用环境变量驱动的脚本或 `curl`，避免将 Token/ID 写死在代码里：
-```bash
-# 获取项目信息
-curl -H "Authorization: Bearer $VERCEL_TOKEN" \
-	"https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID"
+欢迎提交 Issue 和 Pull Request！
 
-# 列出域名
-curl -H "Authorization: Bearer $VERCEL_TOKEN" \
-	"https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/domains"
+## 📄 许可证
 
-# 绑定域名
-curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-	-H "Content-Type: application/json" \
-	-d '{"name":"modamoda.club"}' \
-	"https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/domains"
-
-# 触发域名验证
-curl -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
-	"https://api.vercel.com/v10/domains/modamoda.club/verify"
-```
+MIT License
 
 ---
-*Powered by Google Gemini & Moda Labs.*
+
+*Powered by Google Gemini & MODA Labs*
