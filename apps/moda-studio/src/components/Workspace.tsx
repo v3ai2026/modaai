@@ -1,60 +1,67 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useSpring, AnimatePresence } from 'framer-motion';
-import { SectionId, Asset, Message, PrivateNode } from '../types';
-import SmartCompiler from './AIStylist';
-import TemplateWarehouse from './TemplateWarehouse';
+import { SectionId, Message, PrivateNode } from '../types';
+import SmartCompiler from './SmartCompiler';
 import MediaStudio from './MediaStudio';
 import AdminDashboard from './AdminDashboard';
 import { Newsroom } from './Newsroom';
 import { Docs } from './Docs';
 import { LiveSandbox } from './LiveSandbox';
 import { ClusterTopology } from './ClusterTopology';
-import { ComputeVault } from './ComputeVault';
 import { AIMarket } from './AIMarket';
 import { BrandVault } from './BrandVault'; 
-import { MemoryVault } from './MemoryVault'; // New Import
-import { 
-  Plus, Minus, Grip, Maximize, Crosshair, 
-  Layers, Zap, ShoppingCart, Palette, LayoutDashboard, Settings,
-  Map as MapIcon, MousePointer2, Briefcase, Database
-} from 'lucide-react';
+import { MemoryVault } from './MemoryVault'; 
+import { Plus, Minus, MousePointer2, LayoutDashboard, Search, Command, Command as CommandIcon, ArrowRight } from 'lucide-react';
+
+const NodeWrapper: React.FC<{ x: number, y: number, w: number, h: number, title: string, children: React.ReactNode }> = ({ x, y, w, h, title, children }) => (
+  <div 
+    className="absolute group/node interactive"
+    style={{ left: x, top: y, width: w, height: h, transform: 'translate(-50%, -50%)' }}
+  >
+    <div className="absolute -top-12 left-0 flex items-center gap-4 text-white/20 group-hover/node:text-luxury-gold transition-all duration-500">
+      <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover/node:bg-luxury-gold animate-pulse"></div>
+      <span className="text-[10px] font-black uppercase tracking-[0.5em] italic">{title}</span>
+    </div>
+    <div className="w-full h-full bg-[#050505] border border-white/5 rounded-[4rem] overflow-hidden shadow-[0_60px_120px_rgba(0,0,0,0.8)] group-hover/node:border-luxury-gold/20 transition-all duration-700">
+      {children}
+    </div>
+  </div>
+);
 
 interface WorkspaceProps {
   activeStep: string;
   messages: Message[];
   isProcessing: boolean;
-  assets: Asset[];
-  onUpdateAsset: (id: string, updates: Partial<Asset>) => void;
   nodes: PrivateNode[];
-  onNodeControl: (id: string, action: 'RESTART' | 'TOGGLE') => void;
   onSendMessage: (content: string) => void;
   onStepChange: (id: string) => void;
 }
 
-const SECTION_MAP: Record<string, { x: number, y: number }> = {
-  [SectionId.Dashboard]: { x: 0, y: 0 },
-  [SectionId.MistBuilder]: { x: 1200, y: 0 },
-  [SectionId.Preview]: { x: 2400, y: 0 },
-  [SectionId.AIMarket]: { x: 0, y: 1200 },
-  [SectionId.BrandVault]: { x: 1200, y: -1200 }, 
-  [SectionId.CreationLab]: { x: 1200, y: 1200 },
-  [SectionId.Newsroom]: { x: -1200, y: 1200 },
-  [SectionId.Cluster]: { x: -2400, y: 1200 },
-  [SectionId.Vault]: { x: -1200, y: -1200 },
-  [SectionId.Docs]: { x: -2400, y: 0 },
-  [SectionId.Admin]: { x: -1200, y: 0 },
+const SECTION_MAP: Record<string, { x: number, y: number, label: string }> = {
+  [SectionId.Dashboard]: { x: 0, y: 0, label: 'Dashboard' },
+  [SectionId.Admin]: { x: -1400, y: 0, label: 'Strategic Command' },
+  [SectionId.Docs]: { x: -2800, y: 0, label: 'Tech Protocol' },
+  [SectionId.MistBuilder]: { x: 1400, y: 0, label: 'Neural Compiler' },
+  [SectionId.Preview]: { x: 2800, y: 0, label: 'Live Sandbox' },
+  [SectionId.AIMarket]: { x: 0, y: 1400, label: 'AI Intel Market' },
+  [SectionId.BrandVault]: { x: 1400, y: -1400, label: 'Brand Vault' }, 
+  [SectionId.CreationLab]: { x: 1400, y: 1400, label: 'Creation Studio' },
+  [SectionId.Newsroom]: { x: -1400, y: 1400, label: 'News Zeitgeist' },
+  [SectionId.Cluster]: { x: -2800, y: 1400, label: 'Cluster Map' },
+  [SectionId.Vault]: { x: -1400, y: -1400, label: 'Neural Memory' },
 };
 
 const Workspace: React.FC<WorkspaceProps> = ({ 
-  activeStep, messages, isProcessing, assets, onUpdateAsset, nodes, onNodeControl, onSendMessage, onStepChange
+  activeStep, messages, isProcessing, nodes, onSendMessage, onStepChange
 }) => {
   const [scale, setScale] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const dragStart = useRef({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const springConfig = { damping: 40, stiffness: 220, mass: 1 };
+  
+  const springConfig = { damping: 45, stiffness: 240 };
   const springX = useSpring(0, springConfig);
   const springY = useSpring(0, springConfig);
 
@@ -64,7 +71,19 @@ const Workspace: React.FC<WorkspaceProps> = ({
       springX.set(-coords.x);
       springY.set(-coords.y);
     }
-  }, [activeStep, springX, springY]);
+  }, [activeStep]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(prev => !prev);
+      }
+      if (e.key === 'Escape') setShowSearch(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button, input, textarea, a, .interactive')) return;
@@ -80,197 +99,187 @@ const Workspace: React.FC<WorkspaceProps> = ({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  const teleportTo = useCallback((id: string) => {
-    onStepChange(id);
-  }, [onStepChange]);
+  const filteredSections = useMemo(() => {
+    if (!searchQuery) return [];
+    return Object.entries(SECTION_MAP).filter(([_, v]) => 
+      v.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
 
   return (
     <div 
-      ref={containerRef}
-      className="flex-1 h-full overflow-hidden bg-[#020202] relative cursor-grab active:cursor-grabbing no-scrollbar"
+      className="flex-1 h-full overflow-hidden bg-[#020202] relative cursor-grab active:cursor-grabbing"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <motion.div 
-        className="absolute inset-0 pointer-events-none singularity-grid"
-        style={{ 
-          x: springX, 
-          y: springY, 
-          scale,
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-google-accent/[0.02] to-transparent animate-pulse" />
-      </motion.div>
+      <motion.div className="absolute inset-0 pointer-events-none singularity-grid" style={{ x: springX, y: springY, scale }} />
 
-      <div className="fixed top-28 left-12 z-[60] mix-difference pointer-events-none">
-        <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em] italic block mb-2">Current_Sector</span>
-        <AnimatePresence mode="wait">
-          <motion.h2 
-            key={activeStep}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="text-2xl font-black italic text-white uppercase tracking-tighter"
-          >
-            {activeStep.replace('_', ' ')}
-          </motion.h2>
-        </AnimatePresence>
-      </div>
-
-      <div className="fixed bottom-12 right-12 z-[60] group">
-        <div className="w-64 h-48 bg-black/60 backdrop-blur-3xl border border-white/5 rounded-[3rem] p-7 shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-hidden group-hover:border-google-accent/30 transition-all duration-700">
-           <div className="flex justify-between items-center mb-5">
-              <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] italic flex items-center gap-3">
-                <MapIcon size={12} className="text-google-accent" /> Teleport_Grid
-              </span>
-              <div className="w-1.5 h-1.5 rounded-full bg-google-success shadow-[0_0_10px_#81c995]" />
-           </div>
-           
-           <div className="relative w-full h-full border border-white/5 rounded-2xl bg-black/40 p-4">
-              {Object.entries(SECTION_MAP).map(([id, coords]) => (
-                <button 
-                  key={id}
-                  onClick={() => teleportTo(id)}
-                  title={`Teleport to ${id}`}
-                  className={`absolute w-3 h-3 rounded-full transition-all duration-500 hover:scale-150 interactive ${
-                    id === activeStep ? 'bg-google-accent shadow-[0_0_15px_#8ab4f8] scale-125 z-10' : 'bg-white/10 hover:bg-white/40'
-                  }`}
-                  style={{ 
-                    left: `calc(50% + ${coords.x / 50}px)`, 
-                    top: `calc(50% + ${coords.y / 50}px)`,
-                    transform: 'translate(-50%, -50%)'
-                  }}
-                />
-              ))}
-              
-              <motion.div 
-                className="absolute border-[1.5px] border-google-accent/40 bg-google-accent/5 rounded-[4px] pointer-events-none"
-                style={{
-                  width: 40 / scale,
-                  height: 25 / scale,
-                  left: `calc(50% - ${springX}px / 50)`,
-                  top: `calc(50% - ${springY}px / 50)`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              />
-           </div>
-        </div>
-      </div>
-
-      <motion.div 
-        className="absolute left-1/2 top-1/2 w-0 h-0"
-        style={{ x: springX, y: springY, scale }}
-      >
-        <NodeWrapper x={0} y={0} w={1000} h={700} title="CORE_DASHBOARD">
-          <div className="p-12 space-y-12 h-full overflow-y-auto no-scrollbar bg-black/40 backdrop-blur-3xl rounded-[4rem]">
-             <header><span className="text-google-accent text-[11px] font-black uppercase tracking-[0.5em] mb-4 block italic">System Pulse</span><h2 className="text-6xl font-black italic text-white tracking-tighter uppercase leading-none">Global Stats</h2></header>
-             <div className="grid grid-cols-2 gap-8">
-                <StatBox label="Impressions" val="14.2M" sub="+12.5%" color="google-accent" />
-                <StatBox label="Conversion" val="8.9%" sub="Optimized" color="google-success" />
+      <motion.div className="absolute left-1/2 top-1/2 w-0 h-0" style={{ x: springX, y: springY, scale }}>
+        <NodeWrapper x={0} y={0} w={1200} h={800} title="CENTRAL_DASHBOARD">
+          <div className="w-full h-full flex flex-col items-center justify-center p-20 text-center">
+             <div className="w-32 h-32 bg-luxury-gold/10 rounded-[3rem] border border-luxury-gold/20 flex items-center justify-center text-luxury-gold mb-10 shadow-[0_0_80px_rgba(212,175,55,0.1)]">
+                <LayoutDashboard size={64} />
              </div>
+             <h2 className="text-5xl font-black italic text-white uppercase tracking-tighter mb-6">Welcome to Moda OS</h2>
+             <p className="text-white/40 max-w-lg italic leading-relaxed mb-12 text-lg">
+                Your private neural workstation is live. Access modules via the command palette (Cmd+K) or sidebar.
+             </p>
+             <button 
+              onClick={() => onStepChange(SectionId.MistBuilder)}
+              className="px-12 py-5 bg-white text-black rounded-2xl font-black uppercase text-[11px] tracking-[0.5em] italic hover:bg-luxury-gold transition-all shadow-2xl"
+             >
+                Enter Compiler
+             </button>
           </div>
         </NodeWrapper>
 
-        <NodeWrapper x={1200} y={0} w={1100} h={800} title="NEURAL_COMPILER_IDE">
+        <NodeWrapper x={-1400} y={0} w={1200} h={850} title="STRATEGIC_COMMAND">
+          <AdminDashboard nodes={nodes} />
+        </NodeWrapper>
+
+        <NodeWrapper x={-2800} y={0} w={1200} h={850} title="TECH_PROTOCOL">
+          <Docs />
+        </NodeWrapper>
+
+        <NodeWrapper x={1400} y={0} w={1200} h={900} title="NEURAL_COMPILER">
            <SmartCompiler messages={messages} isProcessing={isProcessing} onSendMessage={onSendMessage} />
         </NodeWrapper>
 
-        <NodeWrapper x={2400} y={0} w={1200} h={850} title="LIVE_PREVIEW_SANDBOX">
+        <NodeWrapper x={2800} y={0} w={1200} h={900} title="LIVE_PREVIEW">
            <LiveSandbox />
         </NodeWrapper>
 
-        <NodeWrapper x={0} y={1200} w={1200} h={850} title="GLOBAL_INTELLIGENCE_MARKET">
-           <AIMarket />
-        </NodeWrapper>
-
-        <NodeWrapper x={1200} y={-1200} w={1200} h={850} title="BRAND_VAULT_WIN_PKGS">
-           <BrandVault />
-        </NodeWrapper>
-
-        <NodeWrapper x={1200} y={1200} w={1200} h={850} title="CREATION_STUDIO_LAB">
+        <NodeWrapper x={1400} y={1400} w={1200} h={900} title="CREATION_STUDIO">
            <MediaStudio />
         </NodeWrapper>
 
-        <NodeWrapper x={1200} y={2400} w={1200} h={900} title="ARCHETYPE_VAULT">
-           <TemplateWarehouse />
+        <NodeWrapper x={0} y={1400} w={1200} h={900} title="AI_INTEL_MARKET">
+           <AIMarket />
         </NodeWrapper>
 
-        <NodeWrapper x={-1200} y={1200} w={1200} h={850} title="ZEITGEIST_RADAR_NODE">
+        <NodeWrapper x={-1400} y={1400} w={1200} h={900} title="NEWS_ZEITGEIST">
            <Newsroom />
         </NodeWrapper>
 
-        <NodeWrapper x={-2400} y={1200} w={1200} h={850} title="CLUSTER_TOPOLOGY_MONITOR">
-           <ClusterTopology nodes={nodes} />
-        </NodeWrapper>
-
-        <NodeWrapper x={-1200} y={-1200} w={1200} h={850} title="NEURAL_MEMORY_VAULT">
+        <NodeWrapper x={-1400} y={-1400} w={1200} h={900} title="NEURAL_MEMORY">
            <MemoryVault />
         </NodeWrapper>
-
-        <NodeWrapper x={-2400} y={0} w={1200} h={850} title="TECHNICAL_PROTOCOL_DOCS">
-           <Docs />
+        
+        <NodeWrapper x={1400} y={-1400} w={1200} h={900} title="BRAND_VAULT">
+           <BrandVault />
         </NodeWrapper>
 
-        <NodeWrapper x={-1200} y={0} w={1100} h={800} title="MISSION_CONTROL_GATEWAY">
-           <AdminDashboard nodes={nodes} />
+        <NodeWrapper x={-2800} y={1400} w={1200} h={900} title="CLUSTER_MAP">
+           <ClusterTopology nodes={nodes} />
         </NodeWrapper>
-
-        <NodeDecoration x={-800} y={-800} text="SPATIAL" />
-        <NodeDecoration x={2000} y={1500} text="SYNTH" />
-        <NodeDecoration x={-1500} y={2000} text="PROTO" />
-        <NodeDecoration x={1500} y={-1500} text="BRAND" />
       </motion.div>
 
-      <div className="fixed bottom-12 left-12 flex items-center gap-4 px-8 py-5 bg-black/60 backdrop-blur-3xl border border-white/5 rounded-full shadow-2xl z-50">
-        <button onClick={() => setScale(s => Math.max(0.2, s - 0.1))} className="p-3 hover:bg-white/10 rounded-full transition-all text-white/40 hover:text-white interactive"><Minus size={18}/></button>
-        <div className="w-16 text-center text-[10px] font-mono font-black text-white/60 uppercase tracking-widest">{Math.round(scale * 100)}%</div>
-        <button onClick={() => setScale(s => Math.min(2, s + 0.1))} className="p-3 hover:bg-white/10 rounded-full transition-all text-white/40 hover:text-white interactive"><Plus size={18}/></button>
-        <div className="w-px h-6 bg-white/10 mx-2"></div>
+      {/* Global Toolbar */}
+      <div className="fixed bottom-12 left-12 flex items-center gap-4 px-8 py-4 bg-black/60 backdrop-blur-3xl border border-white/5 rounded-full z-[110]">
+        <button onClick={() => setScale(s => Math.max(0.1, s - 0.1))} className="p-2.5 hover:bg-white/10 rounded-full transition-all text-white/40"><Minus size={16}/></button>
+        <div className="w-12 text-center text-[10px] font-mono font-black text-white/60">{Math.round(scale * 100)}%</div>
+        <button onClick={() => setScale(s => Math.min(2, s + 0.1))} className="p-2.5 hover:bg-white/10 rounded-full transition-all text-white/40"><Plus size={16}/></button>
+        <div className="w-px h-5 bg-white/10 mx-2"></div>
         <button 
-          onClick={() => { springX.set(0); springY.set(0); setScale(1); teleportTo(SectionId.Dashboard); }}
-          className="flex items-center gap-3 px-6 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-google-accent transition-all italic active:scale-95 shadow-xl interactive"
+          onClick={() => { springX.set(0); springY.set(0); setScale(1); onStepChange(SectionId.Dashboard); }}
+          className="flex items-center gap-3 px-6 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-luxury-gold transition-all italic shadow-xl"
         >
-          <MousePointer2 size={14} /> Reset View
+          <MousePointer2 size={14} /> Center View
         </button>
       </div>
+
+      <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[110]">
+         <button 
+          onClick={() => setShowSearch(true)}
+          className="flex items-center gap-6 px-10 py-5 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-full hover:border-luxury-gold/40 transition-all group shadow-2xl"
+         >
+            <Search size={18} className="text-white/20 group-hover:text-luxury-gold transition-colors" />
+            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-white/20 group-hover:text-white transition-colors italic">Command Palette</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[9px] font-mono text-white/20">
+               <CommandIcon size={10} /> K
+            </div>
+         </button>
+      </div>
+
+      <AnimatePresence>
+        {showSearch && (
+          <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-40 px-6">
+             <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowSearch(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+             />
+             <motion.div 
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="w-full max-w-2xl bg-luxury-obsidian border border-white/10 rounded-[3rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative z-10"
+             >
+                <div className="p-10 flex items-center gap-8 border-b border-white/5">
+                   <CommandIcon className="text-luxury-gold" size={24} />
+                   <input 
+                    autoFocus
+                    placeholder="Search neural sectors..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 bg-transparent text-xl font-black italic uppercase text-white outline-none placeholder:text-white/10 tracking-widest"
+                   />
+                </div>
+                <div className="p-4 max-h-[400px] overflow-y-auto studio-scroll">
+                   {filteredSections.length > 0 ? (
+                     <div className="space-y-2">
+                        {filteredSections.map(([id, info]) => (
+                          <button 
+                            key={id} 
+                            onClick={() => { onStepChange(id as SectionId); setShowSearch(false); setSearchQuery(''); }}
+                            className="w-full flex items-center justify-between p-6 hover:bg-white/5 rounded-2xl transition-all group"
+                          >
+                             <div className="flex items-center gap-6">
+                                <div className="w-10 h-10 rounded-xl bg-luxury-gold/5 border border-luxury-gold/20 flex items-center justify-center text-luxury-gold group-hover:bg-luxury-gold group-hover:text-black transition-all">
+                                   <ArrowRight size={18} />
+                                </div>
+                                <span className="text-lg font-black italic uppercase text-white group-hover:text-luxury-gold transition-colors">{info.label}</span>
+                             </div>
+                             <span className="text-[9px] font-mono text-white/10 uppercase tracking-widest">Sector::{id}</span>
+                          </button>
+                        ))}
+                     </div>
+                   ) : searchQuery ? (
+                     <div className="p-20 text-center space-y-4">
+                        <Search size={40} className="mx-auto text-white/10" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/20 italic">No Sector Linked to Query</p>
+                     </div>
+                   ) : (
+                     <div className="p-10">
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/10 mb-6 italic">Quick Access Nodes</p>
+                        <div className="grid grid-cols-2 gap-4">
+                           {Object.entries(SECTION_MAP).slice(1, 5).map(([id, info]) => (
+                             <button 
+                               key={id}
+                               onClick={() => { onStepChange(id as SectionId); setShowSearch(false); setSearchQuery(''); }}
+                               className="w-full flex items-center justify-between p-6 hover:bg-white/5 rounded-2xl transition-all group"
+                             >
+                               <div className="flex items-center gap-6">
+                                 <div className="w-10 h-10 rounded-xl bg-luxury-gold/5 border border-luxury-gold/20 flex items-center justify-center text-luxury-gold group-hover:bg-luxury-gold group-hover:text-black transition-all">
+                                   <ArrowRight size={18} />
+                                 </div>
+                                 <span className="text-lg font-black italic uppercase text-white group-hover:text-luxury-gold transition-colors">{info.label}</span>
+                               </div>
+                               <span className="text-[9px] font-mono text-white/10 uppercase tracking-widest">Sector::{id}</span>
+                             </button>
+                           ))}
+                        </div>
+                     </div>
+                   )}
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
-
-const NodeWrapper = ({ x, y, w, h, title, children }: { x: number, y: number, w: number, h: number, title: string, children: React.ReactNode }) => (
-  <div 
-    className="absolute group/node interactive"
-    style={{ left: x, top: y, width: w, height: h, transform: 'translate(-50%, -50%)' }}
-  >
-    <div className="absolute -top-12 left-0 flex items-center gap-4 text-white/20 group-hover/node:text-google-accent transition-all duration-500">
-      <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover/node:bg-google-accent animate-pulse shadow-[0_0_10px_currentColor]"></div>
-      <span className="text-[10px] font-black uppercase tracking-[0.5em] italic">{title}</span>
-    </div>
-    
-    <div className="w-full h-full bg-[#080808] border border-white/5 rounded-[4rem] overflow-hidden shadow-[0_60px_120px_rgba(0,0,0,0.8)] group-hover/node:border-google-accent/20 group-hover/node:-translate-y-2 group-hover/node:shadow-[0_80px_160px_rgba(0,0,0,0.9)] transition-all duration-700 ease-out">
-      {children}
-    </div>
-
-    <div className="absolute -z-10 top-1/2 left-full w-40 h-[1px] bg-gradient-to-r from-white/10 to-transparent"></div>
-    <div className="absolute -z-10 top-1/2 right-full w-40 h-[1px] bg-gradient-to-l from-white/10 to-transparent"></div>
-  </div>
-);
-
-const NodeDecoration = ({ x, y, text }: { x: number, y: number, text: string }) => (
-  <div className="absolute opacity-[0.03] select-none pointer-events-none" style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}>
-    <span className="text-[160px] font-black italic text-white tracking-tighter uppercase">{text}</span>
-  </div>
-);
-
-const StatBox = ({ label, val, sub, color }: any) => (
-  <div className="p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-[3.5rem] shadow-2xl relative overflow-hidden group">
-    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform"><Layers size={80} /></div>
-    <p className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em] mb-8 italic">{label}</p>
-    <div className="flex items-baseline gap-3"><span className={`text-7xl font-black italic text-${color} tracking-tighter`}>{val}</span></div>
-    <p className="text-[10px] text-google-success mt-14 font-black uppercase flex items-center gap-4 tracking-[0.3em] italic">{sub}</p>
-  </div>
-);
 
 export default Workspace;

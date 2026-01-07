@@ -42,7 +42,8 @@ export const TEMPLATE_DB = [
   }
 ];
 
-const TemplateCard = ({ template }: { template: typeof TEMPLATE_DB[0] }) => (
+// Fix: Use React.FC to allow standard JSX attributes like 'key' when this component is used in a map function
+const TemplateCard: React.FC<{ template: typeof TEMPLATE_DB[0] }> = ({ template }) => (
   <motion.div 
     layout
     initial={{ opacity: 0, y: 20 }}
