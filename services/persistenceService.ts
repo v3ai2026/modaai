@@ -3,13 +3,13 @@ import { MemoryNode, User } from "../types";
 
 /**
  * moda AI Studio - Local Persistence Engine
- * Fixed implementation to handle auto-generation of metadata.
  */
 
 const STORAGE_KEYS = {
   MEMORIES: 'MODA_MCP_MEMORIES',
   USER: 'MODA_AUTH_USER',
-  API_KEYS: 'MODA_VAULT_KEYS'
+  API_KEYS: 'MODA_VAULT_KEYS',
+  THIRD_PARTY_KEYS: 'MODA_EXTERNAL_SECRETS' // 存储其他 API 密钥
 };
 
 export const authService = {
@@ -43,6 +43,29 @@ export const authService = {
     };
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
+  }
+};
+
+export const vaultService = {
+  setKey: (provider: string, key: string) => {
+    const current = vaultService.getAllKeys();
+    current[provider] = key;
+    localStorage.setItem(STORAGE_KEYS.THIRD_PARTY_KEYS, JSON.stringify(current));
+  },
+  getKey: (provider: string): string | null => {
+    return vaultService.getAllKeys()[provider] || null;
+  },
+  getAllKeys: (): Record<string, string> => {
+    const data = localStorage.getItem(STORAGE_KEYS.THIRD_PARTY_KEYS);
+    return data ? JSON.parse(data) : {};
+  },
+  removeKey: (provider: string) => {
+    const current = vaultService.getAllKeys();
+    delete current[provider];
+    localStorage.setItem(STORAGE_KEYS.THIRD_PARTY_KEYS, JSON.stringify(current));
+  },
+  clearAll: () => {
+    localStorage.removeItem(STORAGE_KEYS.THIRD_PARTY_KEYS);
   }
 };
 

@@ -1,4 +1,5 @@
 
+
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -12,7 +13,7 @@ export interface User {
   username?: string;
 }
 
-export type LLMProvider = 'GEMINI' | 'OPENAI';
+export type LLMProvider = 'GEMINI' | 'OPENAI' | 'DEEPSEEK' | 'ANTHROPIC';
 
 export type CompilerStatus = 'IDLE' | 'CONFIGURING' | 'COMPILING' | 'DEPLOYING' | 'READY' | 'SYNCING';
 
@@ -43,33 +44,10 @@ export interface PrivateNode {
   type: 'LOGIC' | 'RENDER' | 'DATA' | 'VIDEO' | 'GATEWAY';
 }
 
-export interface Asset {
-  id: string;
-  name: string;
-  type: string;
-  status: 'ACTIVE' | 'PENDING' | 'ARCHIVED';
-  revenue: number;
-  monetizationModel: 'Subscription' | 'One-time' | 'Ads' | 'Free';
-  icon: string;
-}
-
-export interface BrandPackage {
-  id: string;
-  name: string;
-  logo: string;
-  status: 'INSTALLED' | 'SYNCING' | 'PENDING' | 'UPDATE_AVAILABLE';
-  version: string;
-  lastSync: string;
-  dataWeight: string;
-  category: 'LUXURY' | 'STREETWEAR' | 'FAST_FASHION';
-}
-
-export type VendorType = 'AI_MODEL' | 'FACTORY' | 'LOGISTICS';
-
 export interface Vendor {
   id: string;
   name: string;
-  type: VendorType;
+  type: 'AI_MODEL' | 'FACTORY' | 'LOGISTICS';
   provider: string;
   status: 'active' | 'inactive' | 'error';
   latency: number;
@@ -86,10 +64,14 @@ export interface MemoryNode {
   timestamp: string;
 }
 
-export interface SpiderTask {
+// Fixed: Added BrandPackage interface which was missing and causing errors in BrandVault.tsx
+export interface BrandPackage {
   id: string;
-  target: string;
-  protocol: 'MEDIA' | 'FINANCE' | 'SYSTEM';
-  status: 'IDLE' | 'SCANNING' | 'EXTRACTING' | 'COMPLETE' | 'FAILED';
-  findings: number;
+  name: string;
+  logo: string;
+  status: 'INSTALLED' | 'UPDATE_AVAILABLE' | 'PENDING';
+  version: string;
+  lastSync: string;
+  dataWeight: string;
+  category: 'LUXURY' | 'STREETWEAR' | 'FAST_FASHION';
 }

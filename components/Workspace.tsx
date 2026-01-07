@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useSpring } from 'framer-motion';
-import { SectionId, Asset, Message, PrivateNode } from '../types';
+import { SectionId, Message, PrivateNode } from '../types';
 import SmartCompiler from './SmartCompiler';
 import MediaStudio from './MediaStudio';
 import AdminDashboard from './AdminDashboard';
