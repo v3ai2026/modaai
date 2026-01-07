@@ -100,7 +100,7 @@ const SmartCompiler: React.FC<SmartCompilerProps> = ({ messages, isProcessing, o
                  <p className="text-white/20">/// START_NEURAL_LOG_SYNC ///</p>
                  {messages.map((m, i) => (
                    <p key={i} className="break-all opacity-40">
-                     [NODE_SYNC_{i}] -> {m.role.toUpperCase()}: {m.content.substring(0, 100)}...
+                     {'[NODE_SYNC_' + i + '] -> '} {m.role.toUpperCase()}: {m.content.substring(0, 100)}...
                    </p>
                  ))}
                  {isProcessing && (
@@ -108,7 +108,7 @@ const SmartCompiler: React.FC<SmartCompilerProps> = ({ messages, isProcessing, o
                     <p className="animate-pulse text-google-accent">[RE-ROUTING] Global_Weights_Optimization_Active</p>
                     <p className="text-white/20">Packet_Loss: 0.00%</p>
                     <p className="text-white/20">Jitter: 2.1ms</p>
-                    <p className="text-google-success/80">>>> STOCHASTIC_GRADIENT_DESCENT_STEP_COMPLETE</p>
+                    <p className="text-google-success/80">{'>>> STOCHASTIC_GRADIENT_DESCENT_STEP_COMPLETE'}</p>
                    </>
                  )}
                </div>

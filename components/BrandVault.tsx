@@ -165,7 +165,7 @@ export const BrandVault: React.FC = () => {
                <AnimatePresence>
                  {logs.length > 0 ? logs.map((log, i) => (
                    <motion.div key={i + log} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex gap-4">
-                     <span className="text-google-accent">>></span>
+                     <span className="text-google-accent">{'>'}</span>
                      <span className="text-white/40">{log}</span>
                    </motion.div>
                  )) : <p className="text-white/5 italic">Awaiting brand deployment instructions...</p>}
