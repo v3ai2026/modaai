@@ -143,14 +143,14 @@ const SmartCompiler: React.FC<SmartCompilerProps> = ({ messages, isProcessing, o
             >
                <div className="space-y-2">
                  <p className="text-white/20">/// START_NEURAL_LOG_SYNC ///</p>
-                 <p className="text-luxury-gold/40">>>> ACTIVE_PROVIDER: {provider}</p>
+                 <p className="text-luxury-gold/40">{'>>>'} ACTIVE_PROVIDER: {provider}</p>
                  {messages.map((m, i) => (
                    <p key={i} className="break-all opacity-40">
-                     [NODE_SYNC_{i}] -> {m.role.toUpperCase()}: {m.content.substring(0, 80)}...
+                     {'[NODE_SYNC_'}{i}{']'} {'→'} {m.role.toUpperCase()}: {m.content.substring(0, 80)}...
                    </p>
                  ))}
                  {isProcessing && (
-                   <p className={`animate-pulse ${provider === 'GEMINI' ? 'text-google-accent' : 'text-google-success'}`}>>>> EXECUTING_STOCHASTIC_OPTIMIZATION...</p>
+                   <p className={`animate-pulse ${provider === 'GEMINI' ? 'text-google-accent' : 'text-google-success'}`}>{'>>>>'} EXECUTING_STOCHASTIC_OPTIMIZATION...</p>
                  )}
                </div>
             </motion.div>
