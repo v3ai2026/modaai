@@ -190,7 +190,14 @@ const App: React.FC = () => {
         
         <RightPanel status={status} nodes={nodes} onNodeControl={() => {}} />
       </div>
-      
+      {/* Dev helper: always-visible quick-open for compiler */}
+      <button
+        onClick={() => { navigate('/compiler'); window.dispatchEvent(new CustomEvent('openCompiler')); }}
+        className="fixed bottom-6 right-6 z-[120] px-4 py-2 bg-luxury-gold text-black rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-2xl"
+      >
+        Open Compiler
+      </button>
+
       <AnimatePresence>
         {showAuth && <AccessTerminal onSuccess={(id) => { setMemberId(id); localStorage.setItem('MODA_USER_ID', id); setShowAuth(false); }} onClose={() => setShowAuth(false)} />}
         {showShare && <SharePortal blueprintName="Neural_Production_V3" onClose={() => setShowShare(false)} />}

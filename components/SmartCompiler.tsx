@@ -16,10 +16,22 @@ const SmartCompiler: React.FC<SmartCompilerProps> = ({ messages, isProcessing, o
   const [provider, setProvider] = useState<LLMProvider>('GEMINI');
   const [showProviderMenu, setShowProviderMenu] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, isProcessing]);
+
+  // Focus input when an external 'openCompiler' event is dispatched
+  useEffect(() => {
+    const handler = () => {
+      setView('CHAT');
+      setTimeout(() => inputRef.current?.focus(), 50);
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    };
+    window.addEventListener('openCompiler', handler as EventListener);
+    return () => window.removeEventListener('openCompiler', handler as EventListener);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +173,7 @@ const SmartCompiler: React.FC<SmartCompilerProps> = ({ messages, isProcessing, o
       <form onSubmit={handleSubmit} className="p-10 border-t border-white/5 bg-black/40 backdrop-blur-3xl relative z-10">
         <div className="relative flex items-center bg-white/[0.03] border border-white/10 rounded-[2.5rem] px-10 py-3 focus-within:border-google-accent/40 transition-all group shadow-2xl max-w-5xl mx-auto w-full">
           <input 
+            ref={inputRef}
             type="text" 
             value={input}
             onChange={(e) => setInput(e.target.value)}
